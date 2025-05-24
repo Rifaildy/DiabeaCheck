@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#2563eb" />
+    <meta name="description" content="DiabeaCheck - Sistem deteksi risiko diabetes menggunakan Machine Learning" />
+    <meta name="keywords" content="diabetes, prediksi, machine learning, kesehatan, deteksi dini" />
+    <meta name="author" content="Tim CC25-CF186" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://diabeacheck.vercel.app/" />
+    <meta property="og:title" content="DiabeaCheck - Deteksi Risiko Diabetes" />
+    <meta property="og:description" content="Sistem berbasis web untuk deteksi risiko penyakit diabetes menggunakan Machine Learning" />
+    <meta property="og:image" content="%PUBLIC_URL%/og-image.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://diabeacheck.vercel.app/" />
+    <meta property="twitter:title" content="DiabeaCheck - Deteksi Risiko Diabetes" />
+    <meta property="twitter:description" content="Sistem berbasis web untuk deteksi risiko penyakit diabetes menggunakan Machine Learning" />
+    <meta property="twitter:image" content="%PUBLIC_URL%/og-image.png" />
+
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <title>DiabeaCheck - Deteksi Risiko Diabetes</title>
+  </head>
+  <body>
+    <noscript>
+      <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+        <h1>JavaScript Diperlukan</h1>
+        <p>Aplikasi DiabeaCheck memerlukan JavaScript untuk berjalan dengan baik.</p>
+        <p>Silakan aktifkan JavaScript di browser Anda dan refresh halaman ini.</p>
+      </div>
+    </noscript>
+    <div id="root"></div>
+    
+    <!-- Loading fallback -->
+    <script>
+      // Show loading indicator while React loads
+      if (!window.React) {
+        document.getElementById('root').innerHTML = `
+          <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Inter, sans-serif;">
+            <div style="text-align: center;">
+              <div style="width: 40px; height: 40px; border: 4px solid #e5e7eb; border-top: 4px solid #2563eb; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+              <p style="color: #6b7280;">Memuat DiabeaCheck...</p>
+            </div>
+          </div>
+          <style>
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          </style>
+        `;
+      }
+    </script>
+  </body>
+</html>
