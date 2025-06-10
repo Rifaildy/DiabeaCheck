@@ -36,24 +36,24 @@ const About = () => {
     {
       name: "Ilham Bintang Prakoso",
       id: "FC327D5Y1041",
-      role: "Frontend Developer",
+      role: "Fullstack Developer",
       institution: "Universitas Teknologi Yogyakarta",
-      responsibilities: "Pengembangan Frontend (React.js), Navigasi Halaman",
+      responsibilities: "UI/UX Design, Pengembangan Frontend & Backend Pengujian Aplikasi, Deployment Web App",
     },
     {
       name: "Nasrun Hidayattullah",
       id: "FC327D5Y0383",
-      role: "Backend Developer",
+      role: "Fullstack Developer",
       institution: "Universitas Teknologi Yogyakarta",
       responsibilities:
-        "Pengembangan Backend (Node.js, Express.js), API Development",
+        "UI/UX Design, Pengembangan Frontend & Backend Pengujian Aplikasi, Deployment Web App",
     },
     {
       name: "Rifaildy Nurhuda Assalam",
       id: "FC327D5Y0431",
-      role: "UI/UX Designer",
+      role: "Fullstack Developer",
       institution: "Universitas Teknologi Yogyakarta",
-      responsibilities: "UI/UX Design, Pengujian Aplikasi, Deployment Web App",
+      responsibilities: "UI/UX Design, Pengembangan Frontend & Backend Pengujian Aplikasi, Deployment Web App",
     },
   ];
 

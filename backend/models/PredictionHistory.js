@@ -57,20 +57,20 @@ class PredictionHistory {
       const dbData = {
         user_id: userId,
         session_id: sessionId,
-        age,
-        glucose,
-        blood_pressure: bloodPressure,
-        skin_thickness: skinThickness || null,
-        insulin: insulin || null,
-        bmi,
-        diabetes_pedigree_function: diabetesPedigreeFunction || null,
-        pregnancies: pregnancies || 0,
-        prediction_result: predictionResult,
-        probability,
-        confidence,
+        age: Number.parseInt(age),
+        glucose: Number.parseFloat(glucose),
+        blood_pressure: Number.parseFloat(bloodPressure),
+        skin_thickness: skinThickness ? Number.parseFloat(skinThickness) : null,
+        insulin: insulin ? Number.parseFloat(insulin) : null,
+        bmi: Number.parseFloat(bmi),
+        diabetes_pedigree_function: diabetesPedigreeFunction ? Number.parseFloat(diabetesPedigreeFunction) : null,
+        pregnancies: pregnancies ? Number.parseInt(pregnancies) : 0,
+        prediction_result: Number.parseInt(predictionResult),
+        probability: Number.parseFloat(probability),
+        confidence: confidence ? Number.parseFloat(confidence) : null,
         risk_level: riskLevel,
-        model_version: modelVersion || "1.0.0",
-        model_accuracy: modelAccuracy,
+        model_version: modelVersion || "MLP Neural Network",
+        model_accuracy: modelAccuracy ? Number.parseFloat(modelAccuracy) : null,
         ip_address: ipAddress,
         user_agent: userAgent,
         device_info: deviceInfo ? JSON.stringify(deviceInfo) : null,
@@ -79,9 +79,11 @@ class PredictionHistory {
         created_at: new Date(),
       }
 
+      logger.info("Creating prediction history with data:", dbData)
+
       const result = await db.insert("prediction_history", dbData)
 
-      logger.info("Prediction history created", {
+      logger.info("Prediction history created successfully", {
         predictionId: result.insertId,
         userId,
         riskLevel,
@@ -109,8 +111,14 @@ class PredictionHistory {
     try {
       const { limit = 10, offset = 0, orderBy = "predicted_at DESC" } = options
 
-      const predictions = await db.findMany("prediction_history", { user_id: userId }, { limit, offset, orderBy })
+      const sql = `
+        SELECT * FROM prediction_history 
+        WHERE user_id = ? 
+        ORDER BY predicted_at DESC 
+        LIMIT ? OFFSET ?
+      `
 
+      const predictions = await db.query(sql, [userId, Number.parseInt(limit), Number.parseInt(offset)])
       return predictions.map((data) => new PredictionHistory(data))
     } catch (error) {
       logger.error("Error finding predictions by user ID:", error)
@@ -124,6 +132,28 @@ class PredictionHistory {
       return predictions.map((data) => new PredictionHistory(data))
     } catch (error) {
       logger.error("Error finding predictions by session ID:", error)
+      throw error
+    }
+  }
+
+  static async getRecentPredictions(limit = 10) {
+    try {
+      const sql = `
+        SELECT 
+          ph.*,
+          u.email,
+          u.first_name,
+          u.last_name
+        FROM prediction_history ph
+        LEFT JOIN users u ON ph.user_id = u.id
+        ORDER BY ph.predicted_at DESC
+        LIMIT ?
+      `
+
+      const predictions = await db.query(sql, [Number.parseInt(limit)])
+      return predictions.map((data) => new PredictionHistory(data))
+    } catch (error) {
+      logger.error("Error getting recent predictions:", error)
       throw error
     }
   }
@@ -155,30 +185,6 @@ class PredictionHistory {
     }
   }
 
-  static async getTrendData(userId, days = 30) {
-    try {
-      const sql = `
-        SELECT 
-          DATE(predicted_at) as prediction_date,
-          COUNT(*) as prediction_count,
-          AVG(probability) as avg_probability,
-          AVG(bmi) as avg_bmi,
-          AVG(glucose) as avg_glucose,
-          AVG(blood_pressure) as avg_blood_pressure
-        FROM prediction_history 
-        WHERE user_id = ? 
-          AND predicted_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
-        GROUP BY DATE(predicted_at)
-        ORDER BY prediction_date ASC
-      `
-
-      return await db.query(sql, [userId, days])
-    } catch (error) {
-      logger.error("Error getting trend data:", error)
-      throw error
-    }
-  }
-
   static async getGlobalStats() {
     try {
       const sql = `
@@ -201,111 +207,29 @@ class PredictionHistory {
     }
   }
 
-  static async getRecentPredictions(limit = 10) {
-    try {
-      const sql = `
-        SELECT 
-          ph.*,
-          u.email,
-          u.first_name,
-          u.last_name
-        FROM prediction_history ph
-        LEFT JOIN users u ON ph.user_id = u.id
-        ORDER BY ph.predicted_at DESC
-        LIMIT ?
-      `
-
-      return await db.query(sql, [limit])
-    } catch (error) {
-      logger.error("Error getting recent predictions:", error)
-      throw error
-    }
-  }
-
-  async save() {
-    try {
-      if (this.id) {
-        // Update existing prediction (rarely needed)
-        const updateData = {
-          confidence: this.confidence,
-          model_version: this.modelVersion,
-          model_accuracy: this.modelAccuracy,
-          updated_at: new Date(),
-        }
-
-        await db.update("prediction_history", updateData, { id: this.id })
-        this.updatedAt = updateData.updated_at
-      } else {
-        throw new Error("Use PredictionHistory.create() for creating new predictions")
-      }
-
-      return this
-    } catch (error) {
-      logger.error("Error saving prediction history:", error)
-      throw error
-    }
-  }
-
-  async delete() {
-    try {
-      if (!this.id) {
-        throw new Error("Cannot delete prediction without ID")
-      }
-
-      await db.delete("prediction_history", { id: this.id })
-      logger.info("Prediction history deleted", { predictionId: this.id })
-    } catch (error) {
-      logger.error("Error deleting prediction history:", error)
-      throw error
-    }
-  }
-
-  getRiskLevelIndonesian() {
-    const riskLevels = {
-      Low: "Rendah",
-      Moderate: "Sedang",
-      High: "Tinggi",
-    }
-    return riskLevels[this.riskLevel] || this.riskLevel
-  }
-
-  getFormattedProbability() {
-    return `${Math.round(this.probability * 100)}%`
-  }
-
-  getInputSummary() {
-    return {
-      age: this.age,
-      glucose: this.glucose,
-      bloodPressure: this.bloodPressure,
-      bmi: this.bmi,
-      skinThickness: this.skinThickness,
-      insulin: this.insulin,
-      diabetesPedigreeFunction: this.diabetesPedigreeFunction,
-      pregnancies: this.pregnancies,
-    }
-  }
-
-  getResultSummary() {
-    return {
-      prediction: this.predictionResult,
-      probability: this.probability,
-      probabilityPercentage: this.getFormattedProbability(),
-      confidence: this.confidence,
-      riskLevel: this.riskLevel,
-      riskLevelIndonesian: this.getRiskLevelIndonesian(),
-      modelVersion: this.modelVersion,
-      predictedAt: this.predictedAt,
-    }
-  }
-
   toJSON() {
     return {
       id: this.id,
       userId: this.userId,
       sessionId: this.sessionId,
-      inputData: this.getInputSummary(),
-      results: this.getResultSummary(),
+      inputData: {
+        age: this.age,
+        glucose: this.glucose,
+        bloodPressure: this.bloodPressure,
+        bmi: this.bmi,
+        skinThickness: this.skinThickness,
+        insulin: this.insulin,
+        diabetesPedigreeFunction: this.diabetesPedigreeFunction,
+        pregnancies: this.pregnancies,
+      },
+      results: {
+        prediction: this.predictionResult,
+        probability: this.probability,
+        confidence: this.confidence,
+        riskLevel: this.riskLevel,
+        modelVersion: this.modelVersion,
+        predictedAt: this.predictedAt,
+      },
       metadata: {
         ipAddress: this.ipAddress,
         userAgent: this.userAgent,

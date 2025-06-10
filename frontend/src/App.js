@@ -6,13 +6,14 @@ import "react-toastify/dist/ReactToastify.css"
 import Header from "./components/layout/Header"
 import Footer from "./components/layout/Footer"
 import Home from "./pages/Home/Home"
+import About from "./pages/About/About"
 import Login from "./components/Auth/Login"
 import Register from "./components/Auth/Register"
 import Dashboard from "./components/Dashboard/Dashboard"
 import Prediction from "./pages/Prediction/Prediction"
+import Results from "./pages/Results/Results"
 import History from "./components/History/History"
 import Profile from "./components/Profile/Profile"
-import About from "./pages/About/About"
 
 // Utils
 import { isAuthenticated } from "./utils/auth"
@@ -72,6 +73,14 @@ function App() {
               }
             />
             <Route
+              path="/results"
+              element={
+                <ProtectedRoute>
+                  <Results />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/history"
               element={
                 <ProtectedRoute>
@@ -88,7 +97,7 @@ function App() {
               }
             />
 
-            {/* Catch all route */}
+            {/* Catch-all */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
@@ -104,6 +113,7 @@ function App() {
           pauseOnFocusLoss
           draggable
           pauseOnHover
+          theme="light"
         />
       </div>
     </Router>

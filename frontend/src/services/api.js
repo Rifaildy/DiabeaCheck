@@ -42,7 +42,7 @@ class ApiService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+        throw new Error(errorData.message || errorData.error || `HTTP error! status: ${response.status}`)
       }
 
       const data = await response.json()
@@ -56,6 +56,51 @@ class ApiService {
         throw new Error("Tidak dapat terhubung ke server. Pastikan server backend berjalan.")
       }
 
+      throw error
+    }
+  }
+
+  // Prediction endpoints
+  async predictDiabetes(inputData) {
+    try {
+      console.log("Sending prediction request with data:", inputData)
+      const response = await this.request("/prediction/diabetes", {
+        method: "POST",
+        body: JSON.stringify(inputData),
+      })
+
+      console.log("Prediction response:", response)
+
+      if (!response.success) {
+        throw new Error(response.message || response.error || "Prediction failed")
+      }
+
+      // Return the data part of the response
+      return response.data
+    } catch (error) {
+      console.error("Prediction API error:", error)
+      throw error
+    }
+  }
+
+  // Health check for ML service
+  async checkMLHealth() {
+    try {
+      const response = await this.request("/prediction/health")
+      return response.data
+    } catch (error) {
+      console.error("ML health check error:", error)
+      throw error
+    }
+  }
+
+  // Test prediction
+  async testPrediction() {
+    try {
+      const response = await this.request("/prediction/test")
+      return response.data
+    } catch (error) {
+      console.error("Test prediction error:", error)
       throw error
     }
   }
@@ -120,14 +165,6 @@ class ApiService {
     })
   }
 
-  // Prediction endpoints
-  async predictDiabetes(inputData) {
-    return this.request("/prediction/diabetes", {
-      method: "POST",
-      body: JSON.stringify(inputData),
-    })
-  }
-
   // User endpoints
   async getDashboard() {
     return this.request("/user/dashboard")
@@ -164,6 +201,8 @@ export const logout = () => apiService.logout()
 export const getProfile = () => apiService.getProfile()
 export const updateProfile = (profileData) => apiService.updateProfile(profileData)
 export const predictDiabetes = (inputData) => apiService.predictDiabetes(inputData)
+export const checkMLHealth = () => apiService.checkMLHealth()
+export const testPrediction = () => apiService.testPrediction()
 export const getDashboard = () => apiService.getDashboard()
 export const getPredictionHistory = (page, limit) => apiService.getPredictionHistory(page, limit)
 export const deletePrediction = (id) => apiService.deletePrediction(id)

@@ -1,32 +1,81 @@
 const express = require("express")
-const router = express.Router()
-const MLService = require("../services/mlService")
 const { body, validationResult } = require("express-validator")
+const MLService = require("../services/mlService")
+const PredictionHistory = require("../models/PredictionHistory")
+const { auth } = require("../middleware/auth")
+const logger = require("../utils/logger")
 
-// Create instance of MLService
+const router = express.Router()
 const mlService = new MLService()
 
-// Validation middleware for ML API format
-const validatePredictionInput = [
-  body("age").isInt({ min: 1, max: 120 }).withMessage("Age must be between 1-120"),
-  body("bmi").isFloat({ min: 10, max: 100 }).withMessage("BMI must be between 10-100"),
-  body("glucose").isFloat({ min: 0, max: 500 }).withMessage("Glucose must be between 0-500"),
-  body("insulin").optional().isFloat({ min: 0, max: 1000 }).withMessage("Insulin must be between 0-1000"),
-  body("bloodPressure").isFloat({ min: 0, max: 300 }).withMessage("Blood pressure must be between 0-300"),
-  // Optional fields for backward compatibility
+// Validation rules for diabetes prediction
+const diabetesPredictionValidation = [
+  body("age")
+    .isNumeric()
+    .withMessage("Age must be a number")
+    .isFloat({ min: 1, max: 120 })
+    .withMessage("Age must be between 1-120 years"),
+
+  body("glucose")
+    .isNumeric()
+    .withMessage("Glucose must be a number")
+    .isFloat({ min: 0, max: 300 })
+    .withMessage("Glucose must be between 0-300 mg/dL"),
+
+  body("bloodPressure")
+    .isNumeric()
+    .withMessage("Blood pressure must be a number")
+    .isFloat({ min: 0, max: 250 })
+    .withMessage("Blood pressure must be between 0-250 mmHg"),
+
+  body("bmi")
+    .isNumeric()
+    .withMessage("BMI must be a number")
+    .isFloat({ min: 10, max: 70 })
+    .withMessage("BMI must be between 10-70"),
+
+  // Optional fields - only validate if provided
+  body("insulin")
+    .optional({ nullable: true, checkFalsy: true })
+    .isNumeric()
+    .withMessage("Insulin must be a number")
+    .isFloat({ min: 0, max: 1000 })
+    .withMessage("Insulin must be between 0-1000 mu U/ml"),
+
+  body("skinThickness")
+    .optional({ nullable: true, checkFalsy: true })
+    .isNumeric()
+    .withMessage("Skin thickness must be a number")
+    .isFloat({ min: 0, max: 100 })
+    .withMessage("Skin thickness must be between 0-100 mm"),
+
+  body("diabetesPedigreeFunction")
+    .optional({ nullable: true, checkFalsy: true })
+    .isNumeric()
+    .withMessage("Diabetes pedigree function must be a number")
+    .isFloat({ min: 0, max: 5 })
+    .withMessage("Diabetes pedigree function must be between 0-5"),
+
   body("pregnancies")
-    .optional()
-    .isInt({ min: 0, max: 20 }),
-  body("skinThickness").optional().isFloat({ min: 0, max: 100 }),
-  body("diabetesPedigreeFunction").optional().isFloat({ min: 0, max: 5 }),
+    .optional({ nullable: true, checkFalsy: true })
+    .isNumeric()
+    .withMessage("Pregnancies must be a number")
+    .isFloat({ min: 0, max: 20 })
+    .withMessage("Pregnancies must be between 0-20"),
 ]
 
-// POST /api/prediction/diabetes
-router.post("/diabetes", validatePredictionInput, async (req, res) => {
+// POST /api/prediction/diabetes - Apply auth middleware to get user info
+router.post("/diabetes", auth, diabetesPredictionValidation, async (req, res) => {
   try {
-    // Check for validation errors
+    logger.info("Received prediction request:", {
+      userId: req.user?.id,
+      inputData: req.body,
+    })
+
+    // Check validation errors
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
+      logger.warn("Validation errors:", errors.array())
       return res.status(400).json({
         success: false,
         message: "Validation failed",
@@ -34,92 +83,134 @@ router.post("/diabetes", validatePredictionInput, async (req, res) => {
       })
     }
 
-    const inputData = req.body
-
-    // Make prediction using external ML API
-    const prediction = await mlService.predictDiabetes(inputData)
-
-    if (prediction.error) {
-      return res.status(503).json({
-        success: false,
-        message: "ML service unavailable",
-        error: prediction.error,
-      })
+    // Extract and sanitize input data
+    const inputData = {
+      age: req.body.age,
+      glucose: req.body.glucose,
+      bloodPressure: req.body.bloodPressure,
+      bmi: req.body.bmi,
+      insulin: req.body.insulin || 0, // Default to 0 if not provided
+      skinThickness: req.body.skinThickness || 0,
+      diabetesPedigreeFunction: req.body.diabetesPedigreeFunction || 0,
+      pregnancies: req.body.pregnancies || 0,
     }
 
-    // Save prediction to database (optional)
+    logger.info("Sanitized input data:", inputData)
+
+    // Call ML service
+    const result = await mlService.predictDiabetes(inputData)
+    logger.info("Prediction result:", result)
+
+    // Save prediction to database with authenticated user ID
     try {
-      const db = require("../config/database")
-      await db.query(
-        `INSERT INTO prediction_history 
-         (user_id, input_data, prediction_result, probability, risk_level, created_at) 
-         VALUES (?, ?, ?, ?, ?, NOW())`,
-        [1, JSON.stringify(inputData), prediction.prediction, prediction.probability, prediction.risk_level],
-      )
+      const predictionData = {
+        userId: req.user.id, // Use authenticated user ID
+        sessionId: req.sessionID || `session_${Date.now()}`,
+        age: inputData.age,
+        glucose: inputData.glucose,
+        bloodPressure: inputData.bloodPressure,
+        skinThickness: inputData.skinThickness,
+        insulin: inputData.insulin,
+        bmi: inputData.bmi,
+        diabetesPedigreeFunction: inputData.diabetesPedigreeFunction,
+        pregnancies: inputData.pregnancies,
+        predictionResult: result.prediction === "Diabetes" ? 1 : 0,
+        probability: result.probability,
+        confidence: result.confidence,
+        riskLevel: result.risk_level,
+        modelVersion: result.model_info?.model_type || "MLP Neural Network",
+        modelAccuracy: result.model_info?.accuracy || null,
+        ipAddress: req.ip,
+        userAgent: req.get("User-Agent"),
+        deviceInfo: {
+          platform: req.get("sec-ch-ua-platform"),
+          mobile: req.get("sec-ch-ua-mobile"),
+        },
+        locationData: null,
+      }
+
+      logger.info("Saving prediction with user ID:", {
+        userId: predictionData.userId,
+        userEmail: req.user.email,
+      })
+
+      const savedPrediction = await PredictionHistory.create(predictionData)
+      logger.info("Prediction saved to database:", {
+        id: savedPrediction?.id,
+        userId: predictionData.userId,
+      })
+
+      // Add database ID to result
+      if (savedPrediction?.id) {
+        result.predictionId = savedPrediction.id
+      }
     } catch (dbError) {
-      console.error("Failed to save prediction to database:", dbError)
-      // Continue without failing the request
+      logger.error("Failed to save prediction to database:", dbError)
+      // Continue without failing the request - prediction still works
     }
 
+    // Return successful response
     res.json({
       success: true,
-      data: {
-        input: inputData,
-        prediction: prediction.prediction,
-        probability: prediction.probability,
-        riskLevel: prediction.risk_level,
-        label: prediction.label,
-        confidence: prediction.confidence,
-        recommendations: prediction.recommendations,
-        timestamp: new Date().toISOString(),
-      },
+      message: "Prediction completed successfully",
+      data: result,
+      timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    console.error("Prediction error:", error)
+    logger.error("Prediction error:", error.message)
+
+    // Return error response
     res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: "Prediction failed",
       error: error.message,
+      timestamp: new Date().toISOString(),
     })
   }
 })
 
-// GET /api/prediction/ml-health
-router.get("/ml-health", async (req, res) => {
+// GET /api/prediction/health - Health check for ML service
+router.get("/health", async (req, res) => {
   try {
-    const health = await mlService.healthCheck()
+    const healthStatus = await mlService.healthCheck()
+
     res.json({
       success: true,
-      data: health,
+      message: "Health check completed",
+      data: healthStatus,
+      timestamp: new Date().toISOString(),
     })
   } catch (error) {
+    logger.error("Health check error:", error.message)
+
     res.status(500).json({
       success: false,
       message: "Health check failed",
       error: error.message,
+      timestamp: new Date().toISOString(),
     })
   }
 })
 
-// GET /api/prediction/model-info
-router.get("/model-info", async (req, res) => {
+// GET /api/prediction/test - Test prediction with sample data
+router.get("/test", async (req, res) => {
   try {
+    const testResult = await mlService.testPrediction()
+
     res.json({
       success: true,
-      data: {
-        modelType: "Multilayer Perceptron (MLP)",
-        framework: "TensorFlow/Keras",
-        features: ["Age", "BMI", "Glucose", "Insulin", "BloodPressure"],
-        apiUrl: process.env.ML_API_URL || "http://localhost:8000",
-        version: "1.0.0",
-        description: "Diabetes prediction using trained MLP model with external FastAPI service",
-      },
+      message: "Test prediction completed",
+      data: testResult,
+      timestamp: new Date().toISOString(),
     })
   } catch (error) {
+    logger.error("Test prediction error:", error.message)
+
     res.status(500).json({
       success: false,
-      message: "Failed to get model info",
+      message: "Test prediction failed",
       error: error.message,
+      timestamp: new Date().toISOString(),
     })
   }
 })

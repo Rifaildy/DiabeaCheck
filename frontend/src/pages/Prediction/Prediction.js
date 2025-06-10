@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { toast } from "react-toastify"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {
   faUser,
   faHeartbeat,
@@ -12,12 +12,12 @@ import {
   faVial,
   faUsers,
   faSpinner,
-} from "@fortawesome/free-solid-svg-icons";
-import { predictDiabetes } from "../../services/api";
+} from "@fortawesome/free-solid-svg-icons"
+import { predictDiabetes } from "../../services/api"
 
 const Prediction = () => {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate()
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     age: "",
     glucose: "",
@@ -27,53 +27,73 @@ const Prediction = () => {
     bmi: "",
     diabetesPedigreeFunction: "",
     pregnancies: "",
-  });
+  })
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }));
-  };
+    }))
+  }
 
   const validateForm = () => {
-    const requiredFields = ["age", "glucose", "bloodPressure", "bmi"];
+    const requiredFields = ["age", "glucose", "bloodPressure", "bmi"]
     for (const field of requiredFields) {
       if (!formData[field]) {
-        toast.error(`Field ${field} harus diisi`);
-        return false;
+        toast.error(`Field ${field} harus diisi`)
+        return false
       }
     }
-    return true;
-  };
+    return true
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    if (!validateForm()) return;
+    if (!validateForm()) return
 
-    setLoading(true);
+    setLoading(true)
     try {
-      const result = await predictDiabetes(formData);
+      // Sanitize data - convert empty strings to null for optional fields
+      const sanitizedData = {
+        age: Number.parseFloat(formData.age),
+        glucose: Number.parseFloat(formData.glucose),
+        bloodPressure: Number.parseFloat(formData.bloodPressure),
+        bmi: Number.parseFloat(formData.bmi),
+        skinThickness: formData.skinThickness ? Number.parseFloat(formData.skinThickness) : null,
+        insulin: formData.insulin ? Number.parseFloat(formData.insulin) : null,
+        diabetesPedigreeFunction: formData.diabetesPedigreeFunction
+          ? Number.parseFloat(formData.diabetesPedigreeFunction)
+          : null,
+        pregnancies: formData.pregnancies ? Number.parseInt(formData.pregnancies) : null,
+      }
+
+      console.log("Submitting prediction with data:", sanitizedData)
+
+      const result = await predictDiabetes(sanitizedData)
+      console.log("Prediction result received:", result)
 
       // Store result in sessionStorage to pass to results page
-      sessionStorage.setItem(
-        "predictionResult",
-        JSON.stringify({
-          ...result,
-          inputData: formData,
-        })
-      );
+      const resultData = {
+        ...result,
+        inputData: formData,
+        timestamp: new Date().toISOString(),
+      }
 
-      navigate("/results");
+      sessionStorage.setItem("predictionResult", JSON.stringify(resultData))
+      console.log("Stored result in sessionStorage:", resultData)
+
+      // Navigate to results page
+      console.log("Navigating to results page...")
+      navigate("/results", { replace: true })
     } catch (error) {
-      toast.error("Terjadi kesalahan saat melakukan prediksi");
-      console.error("Prediction error:", error);
+      console.error("Prediction error:", error)
+      toast.error("Terjadi kesalahan saat melakukan prediksi: " + (error.message || "Unknown error"))
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const inputFields = [
     {
@@ -111,7 +131,7 @@ const Prediction = () => {
       label: "Ketebalan Kulit",
       type: "number",
       icon: faRulerVertical,
-      placeholder: "Ketebalan kulit triceps (mm)",
+      placeholder: "Ketebalan kulit triceps (mm) - Opsional",
       required: false,
       min: 0,
       max: 100,
@@ -121,7 +141,7 @@ const Prediction = () => {
       label: "Insulin",
       type: "number",
       icon: faVial,
-      placeholder: "Kadar insulin (mu U/ml)",
+      placeholder: "Kadar insulin (mu U/ml) - Opsional",
       required: false,
       min: 0,
       max: 1000,
@@ -142,7 +162,7 @@ const Prediction = () => {
       label: "Riwayat Keluarga",
       type: "number",
       icon: faUsers,
-      placeholder: "Fungsi silsilah diabetes (0.0-2.5)",
+      placeholder: "Fungsi silsilah diabetes (0.0-2.5) - Opsional",
       required: false,
       min: 0,
       max: 2.5,
@@ -153,24 +173,20 @@ const Prediction = () => {
       label: "Jumlah Kehamilan",
       type: "number",
       icon: faUser,
-      placeholder: "Jumlah kehamilan (untuk wanita)",
+      placeholder: "Jumlah kehamilan (untuk wanita) - Opsional",
       required: false,
       min: 0,
       max: 20,
     },
-  ];
+  ]
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Prediksi Risiko Diabetes
-          </h1>
-          <p className="text-xl text-gray-600">
-            Masukkan data medis Anda untuk mendapatkan prediksi risiko diabetes
-          </p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Prediksi Risiko Diabetes</h1>
+          <p className="text-xl text-gray-600">Masukkan data medis Anda untuk mendapatkan prediksi risiko diabetes</p>
         </div>
 
         {/* Form */}
@@ -180,14 +196,9 @@ const Prediction = () => {
               {inputFields.map((field) => (
                 <div key={field.name}>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <FontAwesomeIcon
-                      icon={field.icon}
-                      className="mr-2 text-blue-600"
-                    />
+                    <FontAwesomeIcon icon={field.icon} className="mr-2 text-blue-600" />
                     {field.label}
-                    {field.required && (
-                      <span className="text-red-500 ml-1">*</span>
-                    )}
+                    {field.required && <span className="text-red-500 ml-1">*</span>}
                   </label>
                   <input
                     type={field.type}
@@ -207,19 +218,12 @@ const Prediction = () => {
 
             {/* Info Box */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-blue-800 mb-2">
-                Informasi Penting:
-              </h3>
+              <h3 className="text-lg font-semibold text-blue-800 mb-2">Informasi Penting:</h3>
               <ul className="text-blue-700 space-y-1 text-sm">
                 <li>• Field yang bertanda (*) wajib diisi</li>
-                <li>
-                  • BMI dapat dihitung dengan rumus: Berat Badan (kg) / (Tinggi
-                  Badan (m))²
-                </li>
-                <li>
-                  • Untuk hasil yang lebih akurat, konsultasikan dengan dokter
-                </li>
-                <li>• Data Anda tidak akan disimpan secara permanen</li>
+                <li>• BMI dapat dihitung dengan rumus: Berat Badan (kg) / (Tinggi Badan (m))²</li>
+                <li>• Field opsional dapat dikosongkan jika tidak diketahui</li>
+                <li>• Untuk hasil yang lebih akurat, konsultasikan dengan dokter</li>
               </ul>
             </div>
 
@@ -232,11 +236,8 @@ const Prediction = () => {
               >
                 {loading ? (
                   <>
-                    <FontAwesomeIcon
-                      icon={faSpinner}
-                      className="animate-spin mr-2"
-                    />
-                    Memproses...
+                    <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
+                    Memproses Prediksi...
                   </>
                 ) : (
                   "Prediksi Sekarang"
@@ -248,18 +249,15 @@ const Prediction = () => {
 
         {/* Additional Info */}
         <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-yellow-800 mb-2">
-            Disclaimer:
-          </h3>
+          <h3 className="text-lg font-semibold text-yellow-800 mb-2">Disclaimer:</h3>
           <p className="text-yellow-700">
-            Hasil prediksi ini hanya untuk referensi dan tidak menggantikan
-            diagnosis medis profesional. Selalu konsultasikan dengan dokter
-            untuk pemeriksaan dan diagnosis yang akurat.
+            Hasil prediksi ini hanya untuk referensi dan tidak menggantikan diagnosis medis profesional. Selalu
+            konsultasikan dengan dokter untuk pemeriksaan dan diagnosis yang akurat.
           </p>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Prediction;
+export default Prediction

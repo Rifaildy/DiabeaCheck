@@ -1,296 +1,311 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {
-  faCheckCircle,
   faExclamationTriangle,
+  faCheckCircle,
   faArrowLeft,
-  faRedo,
   faDownload,
-  faHeartbeat,
-  faAppleAlt,
-  faRunning,
-  faUserMd,
-} from "@fortawesome/free-solid-svg-icons";
+  faShare,
+  faSpinner,
+} from "@fortawesome/free-solid-svg-icons"
 
 const Results = () => {
-  const navigate = useNavigate();
-  const [result, setResult] = useState(null);
+  const navigate = useNavigate()
+  const [result, setResult] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    const storedResult = sessionStorage.getItem("predictionResult");
-    if (storedResult) {
-      setResult(JSON.parse(storedResult));
-    } else {
-      navigate("/prediction");
-    }
-  }, [navigate]);
+    console.log("Results component mounted")
 
-  if (!result) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <FontAwesomeIcon
-            icon={faHeartbeat}
-            className="h-12 w-12 text-blue-600 animate-pulse mb-4"
-          />
-          <p className="text-gray-600">Memuat hasil...</p>
-        </div>
-      </div>
-    );
+    try {
+      // Get result from sessionStorage
+      const storedResult = sessionStorage.getItem("predictionResult")
+      console.log("Stored result from sessionStorage:", storedResult)
+
+      if (!storedResult) {
+        console.log("No stored result found, redirecting to prediction")
+        setError("Tidak ada hasil prediksi yang tersedia")
+        setLoading(false)
+        return
+      }
+
+      const parsedResult = JSON.parse(storedResult)
+      console.log("Parsed prediction result:", parsedResult)
+      setResult(parsedResult)
+    } catch (error) {
+      console.error("Error parsing result:", error)
+      setError("Error memuat hasil prediksi")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const handleBackToPrediction = () => {
+    console.log("Navigating back to prediction")
+    navigate("/prediction")
   }
 
-  const isHighRisk = result.prediction === 1 || result.probability > 0.5;
-  const riskPercentage = Math.round(result.probability * 100);
+  const handleBackToHome = () => {
+    console.log("Navigating back to home")
+    navigate("/")
+  }
 
-  const recommendations = isHighRisk
-    ? [
-        {
-          icon: faUserMd,
-          title: "Konsultasi Dokter",
-          description:
-            "Segera konsultasikan dengan dokter untuk pemeriksaan lebih lanjut",
-        },
-        {
-          icon: faAppleAlt,
-          title: "Pola Makan Sehat",
-          description:
-            "Kurangi konsumsi gula dan karbohidrat, perbanyak sayuran dan protein",
-        },
-        {
-          icon: faRunning,
-          title: "Olahraga Teratur",
-          description: "Lakukan aktivitas fisik minimal 30 menit setiap hari",
-        },
-        {
-          icon: faHeartbeat,
-          title: "Monitor Kesehatan",
-          description: "Pantau kadar gula darah dan tekanan darah secara rutin",
-        },
-      ]
-    : [
-        {
-          icon: faHeartbeat,
-          title: "Pertahankan Gaya Hidup Sehat",
-          description: "Terus jaga pola makan dan olahraga yang sudah baik",
-        },
-        {
-          icon: faAppleAlt,
-          title: "Pola Makan Seimbang",
-          description: "Pertahankan diet seimbang dengan porsi yang tepat",
-        },
-        {
-          icon: faRunning,
-          title: "Aktivitas Fisik",
-          description: "Lanjutkan rutinitas olahraga untuk menjaga kesehatan",
-        },
-        {
-          icon: faUserMd,
-          title: "Pemeriksaan Berkala",
-          description: "Lakukan check-up kesehatan secara berkala",
-        },
-      ];
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <FontAwesomeIcon icon={faSpinner} className="h-12 w-12 text-blue-600 animate-spin mb-4" />
+          <p className="text-gray-600 text-lg">Memuat hasil prediksi...</p>
+        </div>
+      </div>
+    )
+  }
 
-  const generateReport = () => {
-    const reportData = {
-      timestamp: new Date().toLocaleString("id-ID"),
-      inputData: result.inputData,
-      prediction: result.prediction,
-      probability: result.probability,
-      riskLevel: isHighRisk ? "Tinggi" : "Rendah",
-    };
+  if (error || !result) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg mb-6 max-w-md text-center">
+          <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2 text-xl" />
+          <p className="font-medium">{error || "Tidak ada hasil prediksi yang tersedia"}</p>
+          <p className="text-sm mt-2">Silakan lakukan prediksi terlebih dahulu.</p>
+        </div>
+        <div className="flex gap-4">
+          <button
+            onClick={handleBackToPrediction}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+          >
+            <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
+            Kembali ke Prediksi
+          </button>
+          <button
+            onClick={handleBackToHome}
+            className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            Kembali ke Beranda
+          </button>
+        </div>
+      </div>
+    )
+  }
 
-    const reportText = `
-LAPORAN PREDIKSI RISIKO DIABETES
-================================
+  const { prediction, probability, risk_level, recommendations, label, message, raw_output } = result
 
-Tanggal: ${reportData.timestamp}
+  // Determine if it's high risk based on the actual prediction
+  const isHighRisk = prediction === "Diabetes" || raw_output === 1
+  const probabilityPercentage = Math.round((probability || 0) * 100)
 
-DATA INPUT:
-- Usia: ${result.inputData.age} tahun
-- Kadar Glukosa: ${result.inputData.glucose} mg/dL
-- Tekanan Darah: ${result.inputData.bloodPressure} mmHg
-- BMI: ${result.inputData.bmi}
-- Ketebalan Kulit: ${result.inputData.skinThickness || "Tidak diisi"} mm
-- Insulin: ${result.inputData.insulin || "Tidak diisi"} mu U/ml
-- Riwayat Keluarga: ${result.inputData.diabetesPedigreeFunction || "Tidak diisi"}
-- Jumlah Kehamilan: ${result.inputData.pregnancies || "Tidak diisi"}
+  // Get color scheme based on prediction
+  const getRiskColor = () => {
+    if (isHighRisk) {
+      return {
+        bg: "bg-red-50",
+        border: "border-red-200",
+        text: "text-red-800",
+        heading: "text-red-700",
+        icon: faExclamationTriangle,
+        iconColor: "text-red-600",
+        buttonColor: "bg-red-600 hover:bg-red-700",
+      }
+    } else {
+      return {
+        bg: "bg-green-50",
+        border: "border-green-200",
+        text: "text-green-800",
+        heading: "text-green-700",
+        icon: faCheckCircle,
+        iconColor: "text-green-600",
+        buttonColor: "bg-green-600 hover:bg-green-700",
+      }
+    }
+  }
+
+  const riskColor = getRiskColor()
+
+  const downloadReport = () => {
+    const reportContent = `
+LAPORAN HASIL PREDIKSI DIABETES
+===============================
+
+Tanggal: ${new Date().toLocaleString("id-ID")}
 
 HASIL PREDIKSI:
-- Tingkat Risiko: ${reportData.riskLevel}
-- Probabilitas: ${riskPercentage}%
+- Prediksi: ${prediction}
+- Probabilitas: ${probabilityPercentage}%
+- Tingkat Risiko: ${risk_level}
+- Pesan: ${message}
+
+DATA INPUT:
+- Usia: ${result.input_data?.age || "N/A"} tahun
+- BMI: ${result.input_data?.bmi || "N/A"}
+- Glukosa: ${result.input_data?.glucose || "N/A"} mg/dL
+- Insulin: ${result.input_data?.insulin || "N/A"} mu U/ml
+- Tekanan Darah: ${result.input_data?.bloodPressure || "N/A"} mmHg
+
+REKOMENDASI:
+${recommendations?.map((rec, index) => `${index + 1}. ${rec}`).join("\n") || "Tidak ada rekomendasi"}
 
 DISCLAIMER:
-Hasil ini hanya untuk referensi dan tidak menggantikan diagnosis medis profesional.
-Konsultasikan dengan dokter untuk pemeriksaan lebih lanjut.
+Hasil prediksi ini hanya untuk referensi dan tidak menggantikan 
+diagnosis medis profesional. Konsultasikan dengan dokter untuk 
+pemeriksaan dan diagnosis yang akurat.
 
 Generated by DiabeaCheck - Sistem Prediksi Diabetes
-    `;
+    `
 
-    const blob = new Blob([reportText], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `laporan-diabetes-${Date.now()}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+    const blob = new Blob([reportContent], { type: "text/plain;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `laporan-diabetes-${Date.now()}.txt`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen py-12 bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Hasil Prediksi Diabetes
-          </h1>
-          <p className="text-xl text-gray-600">
-            Berikut adalah hasil analisis risiko diabetes Anda
-          </p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Hasil Prediksi Diabetes</h1>
+          <p className="text-xl text-gray-600">Berikut adalah hasil analisis risiko diabetes Anda</p>
         </div>
 
         {/* Main Result Card */}
-        <div
-          className={`bg-white rounded-lg shadow-lg p-8 mb-8 border-l-4 ${
-            isHighRisk ? "border-red-500" : "border-green-500"
-          }`}
-        >
+        <div className={`${riskColor.bg} border ${riskColor.border} rounded-lg p-8 mb-8`}>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center">
-              <FontAwesomeIcon
-                icon={isHighRisk ? faExclamationTriangle : faCheckCircle}
-                className={`h-12 w-12 mr-4 ${isHighRisk ? "text-red-500" : "text-green-500"}`}
-              />
+              <FontAwesomeIcon icon={riskColor.icon} className={`${riskColor.iconColor} text-5xl mr-4`} />
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Risiko {isHighRisk ? "Tinggi" : "Rendah"}
-                </h2>
-                <p className="text-gray-600">Probabilitas: {riskPercentage}%</p>
+                <h2 className={`text-3xl font-bold ${riskColor.text}`}>{prediction}</h2>
+                <p className={`${riskColor.text} text-lg mt-1`}>
+                  Tingkat Risiko: <span className="font-semibold">{risk_level}</span>
+                </p>
               </div>
             </div>
             <div className="text-right">
-              <div
-                className={`text-4xl font-bold ${isHighRisk ? "text-red-500" : "text-green-500"}`}
-              >
-                {riskPercentage}%
-              </div>
-              <div className="text-sm text-gray-500">Tingkat Risiko</div>
+              <div className={`text-5xl font-bold ${riskColor.iconColor}`}>{probabilityPercentage}%</div>
+              <div className="text-sm text-gray-600 mt-1">Probabilitas</div>
             </div>
           </div>
 
-          <div
-            className={`p-4 rounded-lg ${isHighRisk ? "bg-red-50" : "bg-green-50"}`}
-          >
-            <p className={`${isHighRisk ? "text-red-800" : "text-green-800"}`}>
-              {isHighRisk
-                ? "Hasil menunjukkan risiko diabetes yang tinggi. Disarankan untuk segera berkonsultasi dengan dokter untuk pemeriksaan lebih lanjut."
-                : "Hasil menunjukkan risiko diabetes yang rendah. Tetap jaga pola hidup sehat untuk mempertahankan kondisi ini."}
+          {/* Message */}
+          <div className={`${riskColor.bg} border ${riskColor.border} rounded-lg p-4 mb-6`}>
+            <p className={`${riskColor.text} text-lg font-medium`}>
+              {message ||
+                (isHighRisk
+                  ? "Hasil menunjukkan risiko diabetes yang tinggi. Disarankan untuk segera berkonsultasi dengan dokter."
+                  : "Hasil menunjukkan risiko diabetes yang rendah. Tetap jaga pola hidup sehat.")}
             </p>
           </div>
+
+          {/* Recommendations */}
+          {recommendations && recommendations.length > 0 && (
+            <div className="mb-6">
+              <h3 className={`text-xl font-semibold ${riskColor.heading} mb-4`}>Rekomendasi:</h3>
+              <div className="space-y-3 max-h-60 overflow-y-auto">
+                {recommendations.map((rec, index) => (
+                  <div key={index} className={`${riskColor.text} flex items-start`}>
+                    <span className="mr-3 mt-1 w-6 h-6 bg-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
+                      {index + 1}
+                    </span>
+                    <span className="flex-1">{rec}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Input Data Summary */}
         <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">
-            Ringkasan Data Input
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <h3 className="text-xl font-bold text-gray-900 mb-6">Ringkasan Data Input</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-600">Usia</div>
-              <div className="text-lg font-semibold">
-                {result.inputData.age} tahun
-              </div>
+              <div className="text-sm text-gray-600 mb-1">Usia</div>
+              <div className="text-2xl font-bold text-gray-900">{result.input_data?.age || "N/A"}</div>
+              <div className="text-sm text-gray-500">tahun</div>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-600">Glukosa</div>
-              <div className="text-lg font-semibold">
-                {result.inputData.glucose} mg/dL
-              </div>
+              <div className="text-sm text-gray-600 mb-1">BMI</div>
+              <div className="text-2xl font-bold text-gray-900">{result.input_data?.bmi || "N/A"}</div>
+              <div className="text-sm text-gray-500">kg/m²</div>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-600">Tekanan Darah</div>
-              <div className="text-lg font-semibold">
-                {result.inputData.bloodPressure} mmHg
-              </div>
+              <div className="text-sm text-gray-600 mb-1">Glukosa</div>
+              <div className="text-2xl font-bold text-gray-900">{result.input_data?.glucose || "N/A"}</div>
+              <div className="text-sm text-gray-500">mg/dL</div>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-600">BMI</div>
-              <div className="text-lg font-semibold">
-                {result.inputData.bmi}
-              </div>
+              <div className="text-sm text-gray-600 mb-1">Insulin</div>
+              <div className="text-2xl font-bold text-gray-900">{result.input_data?.insulin || "N/A"}</div>
+              <div className="text-sm text-gray-500">mu U/ml</div>
             </div>
-          </div>
-        </div>
-
-        {/* Recommendations */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
-          <h3 className="text-xl font-bold text-gray-900 mb-6">Rekomendasi</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {recommendations.map((rec, index) => (
-              <div key={index} className="flex items-start space-x-4">
-                <div
-                  className={`p-3 rounded-lg ${isHighRisk ? "bg-red-100" : "bg-blue-100"}`}
-                >
-                  <FontAwesomeIcon
-                    icon={rec.icon}
-                    className={`h-6 w-6 ${isHighRisk ? "text-red-600" : "text-blue-600"}`}
-                  />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-1">
-                    {rec.title}
-                  </h4>
-                  <p className="text-gray-600 text-sm">{rec.description}</p>
-                </div>
-              </div>
-            ))}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600 mb-1">Tekanan Darah</div>
+              <div className="text-2xl font-bold text-gray-900">{result.input_data?.bloodPressure || "N/A"}</div>
+              <div className="text-sm text-gray-500">mmHg</div>
+            </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            to="/prediction"
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center"
-          >
-            <FontAwesomeIcon icon={faRedo} className="mr-2" />
-            Prediksi Ulang
-          </Link>
+        <div className="flex flex-wrap justify-center gap-4 mb-8">
           <button
-            onClick={generateReport}
-            className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center justify-center"
+            onClick={handleBackToPrediction}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg flex items-center hover:bg-blue-700 transition-colors"
+          >
+            <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
+            Prediksi Ulang
+          </button>
+
+          <button
+            onClick={downloadReport}
+            className="bg-gray-600 text-white px-6 py-3 rounded-lg flex items-center hover:bg-gray-700 transition-colors"
           >
             <FontAwesomeIcon icon={faDownload} className="mr-2" />
             Unduh Laporan
           </button>
-          <Link
-            to="/"
-            className="bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors flex items-center justify-center"
+
+          <button
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({
+                  title: "Hasil Prediksi Diabetes - DiabeaCheck",
+                  text: `Hasil prediksi diabetes: ${prediction} (${probabilityPercentage}%)`,
+                  url: window.location.href,
+                })
+              } else {
+                const shareText = `Hasil prediksi diabetes: ${prediction} (${probabilityPercentage}%)`
+                navigator.clipboard.writeText(shareText).then(() => {
+                  alert("Hasil telah disalin ke clipboard!")
+                })
+              }
+            }}
+            className={`${riskColor.buttonColor} text-white px-6 py-3 rounded-lg flex items-center transition-colors`}
           >
-            <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
-            Kembali ke Beranda
-          </Link>
+            <FontAwesomeIcon icon={faShare} className="mr-2" />
+            Bagikan
+          </button>
         </div>
 
         {/* Disclaimer */}
-        <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-yellow-800 mb-2">
-            Disclaimer:
-          </h3>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-yellow-800 mb-2">⚠️ Disclaimer:</h3>
           <p className="text-yellow-700">
-            Hasil prediksi ini menggunakan algoritma Machine Learning dan hanya
-            untuk referensi. Tidak menggantikan diagnosis medis profesional.
-            Selalu konsultasikan dengan dokter untuk pemeriksaan dan diagnosis
-            yang akurat.
+            Hasil prediksi ini menggunakan algoritma Machine Learning (MLP Neural Network) dan hanya untuk referensi.
+            Tidak menggantikan diagnosis medis profesional. Selalu konsultasikan dengan dokter untuk pemeriksaan dan
+            diagnosis yang akurat.
           </p>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Results;
+export default Results

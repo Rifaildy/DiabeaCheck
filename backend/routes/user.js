@@ -73,15 +73,15 @@ router.get("/predictions", auth, async (req, res) => {
     const countResult = await db.query(countQuery, [user.id])
     const total = countResult[0].total
 
-    // Get predictions with pagination
+    // Get predictions with pagination - use direct SQL to avoid parameter issues
     const predictionsQuery = `
       SELECT * FROM prediction_history 
       WHERE user_id = ? 
       ORDER BY predicted_at DESC 
-      LIMIT ? OFFSET ?
+      LIMIT ${limit} OFFSET ${offset}
     `
 
-    const predictions = await db.query(predictionsQuery, [user.id, limit, offset])
+    const predictions = await db.query(predictionsQuery, [user.id])
 
     res.json({
       success: true,

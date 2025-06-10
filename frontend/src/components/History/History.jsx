@@ -11,7 +11,9 @@ import {
   FaExclamationTriangle,
   FaCheckCircle,
   FaSearch,
+  FaArrowLeft,
 } from "react-icons/fa"
+import { useNavigate } from "react-router-dom"
 import { getPredictionHistory, deletePrediction } from "../../services/api"
 import LoadingSpinner from "../common/LoadingSpinner"
 
@@ -23,6 +25,8 @@ const History = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedPrediction, setSelectedPrediction] = useState(null)
   const [showModal, setShowModal] = useState(false)
+
+  const navigate = useNavigate()
 
   useEffect(() => {
     loadHistory()
@@ -97,6 +101,15 @@ const History = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
+          <div className="flex items-center mb-4">
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center px-4 py-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors mr-4"
+            >
+              <FaArrowLeft className="h-4 w-4 mr-2" />
+              Kembali ke Dashboard
+            </button>
+          </div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center">
             <FaHistory className="h-8 w-8 mr-3 text-blue-600" />
             Riwayat Prediksi

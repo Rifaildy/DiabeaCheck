@@ -2,15 +2,18 @@
 
 import { useState, useEffect } from "react"
 import { toast } from "react-toastify"
-import { FaUser, FaEdit, FaSave, FaTimes } from "react-icons/fa"
+import { FaUser, FaEdit, FaSave, FaTimes, FaArrowLeft } from "react-icons/fa"
 import { getProfile, updateProfile } from "../../services/api"
 import LoadingSpinner from "../common/LoadingSpinner"
+import { useNavigate } from "react-router-dom"
 
 const Profile = () => {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [formData, setFormData] = useState({})
+
+  const navigate = useNavigate()
 
   useEffect(() => {
     loadProfile()
@@ -58,6 +61,15 @@ const Profile = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
+          <div className="flex items-center mb-4">
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center px-4 py-2 text-gray-600 hover:text-blue-600 hover:bg-gray-50 rounded-lg transition-colors mr-4"
+            >
+              <FaArrowLeft className="h-4 w-4 mr-2" />
+              Kembali ke Dashboard
+            </button>
+          </div>
           <h1 className="text-3xl font-bold text-gray-900">Profil Saya</h1>
           <p className="text-gray-600 mt-2">Kelola informasi pribadi dan pengaturan akun Anda</p>
         </div>

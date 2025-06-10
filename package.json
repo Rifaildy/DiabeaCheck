@@ -1,23 +1,31 @@
 {
   "name": "diabeacheck",
   "version": "1.0.0",
-  "description": "DiabeaCheck - Diabetes Risk Prediction System",
+  "description": "DiabeaCheck - Diabetes Risk Prediction Application",
+  "main": "backend/server.js",
   "scripts": {
     "dev": "concurrently \"npm run backend:dev\" \"npm run frontend:dev\"",
     "backend:dev": "cd backend && npm run dev",
     "frontend:dev": "cd frontend && npm start",
-    "backend:start": "cd backend && npm start",
-    "frontend:start": "cd frontend && npm start",
-    "install:all": "npm run install:backend && npm run install:frontend",
-    "install:backend": "cd backend && npm install",
-    "install:frontend": "cd frontend && npm install",
     "build": "cd frontend && npm run build",
-    "test": "npm run test:backend && npm run test:frontend",
-    "test:backend": "cd backend && npm test",
-    "test:frontend": "cd frontend && npm test"
+    "start": "cd backend && npm start",
+    "test": "npm run backend:test && npm run frontend:test",
+    "backend:test": "cd backend && npm test",
+    "frontend:test": "cd frontend && npm test",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
   },
+  "keywords": [
+    "diabetes",
+    "prediction",
+    "machine-learning",
+    "healthcare",
+    "react",
+    "nodejs"
+  ],
+  "author": "DiabeaCheck Team",
+  "license": "MIT",
   "devDependencies": {
-    "concurrently": "^8.2.2"
-  },
-  "workspaces": ["backend", "frontend"]
+    "concurrently": "^8.2.0",
+    "cross-env": "^7.0.3"
+  }
 }
