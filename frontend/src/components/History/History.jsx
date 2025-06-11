@@ -160,6 +160,11 @@ const History = () => {
                             day: "numeric",
                           })}
                         </div>
+                        {/* Display input data summary */}
+                        <div className="text-xs text-gray-400 mt-1">
+                          Usia: {prediction.age || "N/A"} | Glukosa: {prediction.glucose || "N/A"} | BMI:{" "}
+                          {prediction.bmi || "N/A"}
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-4">
@@ -288,19 +293,35 @@ const History = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-sm text-gray-600">Usia</p>
-                        <p className="text-gray-900">{selectedPrediction.input_data?.age || "N/A"} tahun</p>
+                        <p className="text-gray-900">{selectedPrediction.age || "N/A"} tahun</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">Glukosa</p>
-                        <p className="text-gray-900">{selectedPrediction.input_data?.glucose || "N/A"} mg/dL</p>
+                        <p className="text-gray-900">{selectedPrediction.glucose || "N/A"} mg/dL</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">Tekanan Darah</p>
-                        <p className="text-gray-900">{selectedPrediction.input_data?.bloodPressure || "N/A"} mmHg</p>
+                        <p className="text-gray-900">{selectedPrediction.blood_pressure || "N/A"} mmHg</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">BMI</p>
-                        <p className="text-gray-900">{selectedPrediction.input_data?.bmi || "N/A"}</p>
+                        <p className="text-gray-900">{selectedPrediction.bmi || "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Ketebalan Kulit</p>
+                        <p className="text-gray-900">{selectedPrediction.skin_thickness || "N/A"} mm</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Insulin</p>
+                        <p className="text-gray-900">{selectedPrediction.insulin || "N/A"} mu U/ml</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Riwayat Keluarga</p>
+                        <p className="text-gray-900">{selectedPrediction.diabetes_pedigree_function || "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Jumlah Kehamilan</p>
+                        <p className="text-gray-900">{selectedPrediction.pregnancies || "N/A"}</p>
                       </div>
                     </div>
                   </div>

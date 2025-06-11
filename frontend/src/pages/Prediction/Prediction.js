@@ -38,7 +38,7 @@ const Prediction = () => {
   }
 
   const validateForm = () => {
-    const requiredFields = ["age", "glucose", "bloodPressure", "bmi"]
+    const requiredFields = ["age", "glucose", "bloodPressure", "bmi", "insulin"] // Menambahkan insulin sebagai wajib diisi
     for (const field of requiredFields) {
       if (!formData[field]) {
         toast.error(`Field ${field} harus diisi`)
@@ -95,7 +95,8 @@ const Prediction = () => {
     }
   }
 
-  const inputFields = [
+  // Fields wajib diisi
+  const requiredFields = [
     {
       name: "age",
       label: "Usia",
@@ -127,22 +128,12 @@ const Prediction = () => {
       max: 250,
     },
     {
-      name: "skinThickness",
-      label: "Ketebalan Kulit",
-      type: "number",
-      icon: faRulerVertical,
-      placeholder: "Ketebalan kulit triceps (mm) - Opsional",
-      required: false,
-      min: 0,
-      max: 100,
-    },
-    {
       name: "insulin",
       label: "Insulin",
       type: "number",
       icon: faVial,
-      placeholder: "Kadar insulin (mu U/ml) - Opsional",
-      required: false,
+      placeholder: "Kadar insulin (mu U/ml) - Wajib diisi",
+      required: true, // Mengubah insulin menjadi wajib
       min: 0,
       max: 1000,
     },
@@ -156,6 +147,20 @@ const Prediction = () => {
       min: 10,
       max: 70,
       step: 0.1,
+    },
+  ]
+
+  // Fields opsional
+  const optionalFields = [
+    {
+      name: "skinThickness",
+      label: "Ketebalan Kulit",
+      type: "number",
+      icon: faRulerVertical,
+      placeholder: "Ketebalan kulit triceps (mm) - Opsional",
+      required: false,
+      min: 0,
+      max: 100,
     },
     {
       name: "diabetesPedigreeFunction",
@@ -192,8 +197,36 @@ const Prediction = () => {
         {/* Form */}
         <div className="bg-white rounded-lg shadow-lg p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Wajib Diisi */}
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Data Wajib Diisi</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {inputFields.map((field) => (
+              {requiredFields.map((field) => (
+                <div key={field.name}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <FontAwesomeIcon icon={field.icon} className="mr-2 text-blue-600" />
+                    {field.label}
+                    {field.required && <span className="text-red-500 ml-1">*</span>}
+                  </label>
+                  <input
+                    type={field.type}
+                    name={field.name}
+                    value={formData[field.name]}
+                    onChange={handleInputChange}
+                    placeholder={field.placeholder}
+                    min={field.min}
+                    max={field.max}
+                    step={field.step}
+                    required={field.required}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Opsional */}
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4 mt-6">Data Opsional</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {optionalFields.map((field) => (
                 <div key={field.name}>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <FontAwesomeIcon icon={field.icon} className="mr-2 text-blue-600" />

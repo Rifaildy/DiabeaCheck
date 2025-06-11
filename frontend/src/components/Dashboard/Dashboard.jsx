@@ -33,6 +33,10 @@ const Dashboard = () => {
 
   const { user, stats, recentPredictions } = dashboardData
 
+  // Get latest prediction percentage
+  const latestPredictionPercentage =
+    recentPredictions && recentPredictions.length > 0 ? Math.round(recentPredictions[0].probability * 100) : 0
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -86,10 +90,8 @@ const Dashboard = () => {
                 <FaHeartbeat className="h-6 w-6 text-purple-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Rata-rata Risiko</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {stats?.avg_probability ? `${Math.round(stats.avg_probability * 100)}%` : "0%"}
-                </p>
+                <p className="text-sm font-medium text-gray-600">Prediksi Terakhir</p>
+                <p className="text-2xl font-semibold text-gray-900">{latestPredictionPercentage}%</p>
               </div>
             </div>
           </div>
