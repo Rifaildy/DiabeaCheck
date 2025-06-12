@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://diabeacheck.vercel.app/sitemap.xml
+
+# Disallow admin or sensitive areas (if any in future)
+# Disallow: /admin/
+# Disallow: /api/
+
+# Allow all health-related content
+Allow: /prediction
+Allow: /results
+Allow: /about
+
+# Crawl delay (optional)
+Crawl-delay: 1
