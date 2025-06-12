@@ -7,15 +7,15 @@ const ApiTest = () => {
   const [results, setResults] = useState({})
   const [loading, setLoading] = useState({})
 
-  const runTest = async (testName, testFunction, ...args) => {
-    setLoading((prev) => ({ ...prev, [testName]: true }))
+  const testEndpoint = async (name, testFunction, params = {}) => {
+    setLoading((prev) => ({ ...prev, [name]: true }))
     try {
-      const result = await testFunction(...args)
-      setResults((prev) => ({ ...prev, [testName]: { success: true, data: result } }))
+      const result = await testFunction(params)
+      setResults((prev) => ({ ...prev, [name]: { success: true, data: result } }))
     } catch (error) {
-      setResults((prev) => ({ ...prev, [testName]: { success: false, error: error.message } }))
+      setResults((prev) => ({ ...prev, [name]: { success: false, error: error.message } }))
     } finally {
-      setLoading((prev) => ({ ...prev, [testName]: false }))
+      setLoading((prev) => ({ ...prev, [name]: false }))
     }
   }
 
@@ -27,24 +27,35 @@ const ApiTest = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">API Connection Test</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center">API Connection Test</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="text-center">
+          <p className="font-semibold">Frontend URL:</p>
+          <p className="text-blue-600">https://diabea-check-5ok4.vercel.app</p>
+        </div>
+        <div className="text-center">
+          <p className="font-semibold">Backend URL:</p>
+          <p className="text-green-600">https://apideabeacheck-153b.vercel.app</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Health Check */}
         <div className="border rounded-lg p-4">
           <h3 className="font-semibold mb-2">Health Check</h3>
           <button
-            onClick={() => runTest("health", checkHealth)}
+            onClick={() => testEndpoint("health", checkHealth)}
             disabled={loading.health}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+            className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
           >
-            {loading.health ? "Testing..." : "Test Health"}
+            {loading.health ? "Testing..." : "Test /health"}
           </button>
           {results.health && (
             <div
               className={`mt-2 p-2 rounded text-sm ${results.health.success ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
             >
-              {results.health.success ? `✅ ${results.health.data.message}` : `❌ ${results.health.error}`}
+              {results.health.success ? "✅ Connected" : `❌ ${results.health.error}`}
             </div>
           )}
         </div>
@@ -53,19 +64,17 @@ const ApiTest = () => {
         <div className="border rounded-lg p-4">
           <h3 className="font-semibold mb-2">Database Test</h3>
           <button
-            onClick={() => runTest("database", testDatabase)}
+            onClick={() => testEndpoint("database", testDatabase)}
             disabled={loading.database}
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50"
+            className="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50"
           >
-            {loading.database ? "Testing..." : "Test Database"}
+            {loading.database ? "Testing..." : "Test /api/health"}
           </button>
           {results.database && (
             <div
               className={`mt-2 p-2 rounded text-sm ${results.database.success ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
             >
-              {results.database.success
-                ? `✅ Database: ${results.database.data.database?.status || "Connected"}`
-                : `❌ ${results.database.error}`}
+              {results.database.success ? "✅ DB Connected" : `❌ ${results.database.error}`}
             </div>
           )}
         </div>
@@ -74,9 +83,9 @@ const ApiTest = () => {
         <div className="border rounded-lg p-4">
           <h3 className="font-semibold mb-2">Register Test</h3>
           <button
-            onClick={() => runTest("register", register, testData)}
+            onClick={() => testEndpoint("register", register, testData)}
             disabled={loading.register}
-            className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 disabled:opacity-50"
+            className="w-full bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 disabled:opacity-50"
           >
             {loading.register ? "Testing..." : "Test Register"}
           </button>
@@ -84,7 +93,7 @@ const ApiTest = () => {
             <div
               className={`mt-2 p-2 rounded text-sm ${results.register.success ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
             >
-              {results.register.success ? `✅ User registered successfully` : `❌ ${results.register.error}`}
+              {results.register.success ? "✅ Register OK" : `❌ ${results.register.error}`}
             </div>
           )}
         </div>
@@ -93,9 +102,9 @@ const ApiTest = () => {
         <div className="border rounded-lg p-4">
           <h3 className="font-semibold mb-2">Login Test</h3>
           <button
-            onClick={() => runTest("login", login, { email: testData.email, password: testData.password })}
+            onClick={() => testEndpoint("login", login, { email: testData.email, password: testData.password })}
             disabled={loading.login}
-            className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 disabled:opacity-50"
+            className="w-full bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 disabled:opacity-50"
           >
             {loading.login ? "Testing..." : "Test Login"}
           </button>
@@ -103,17 +112,19 @@ const ApiTest = () => {
             <div
               className={`mt-2 p-2 rounded text-sm ${results.login.success ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
             >
-              {results.login.success ? `✅ Login successful` : `❌ ${results.login.error}`}
+              {results.login.success ? "✅ Login OK" : `❌ ${results.login.error}`}
             </div>
           )}
         </div>
       </div>
 
-      {/* Results Summary */}
+      {/* Results Display */}
       {Object.keys(results).length > 0 && (
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-semibold mb-2">Test Results Summary</h3>
-          <pre className="text-xs overflow-auto">{JSON.stringify(results, null, 2)}</pre>
+        <div className="mt-6">
+          <h3 className="font-semibold mb-2">Detailed Results:</h3>
+          <pre className="bg-gray-100 p-4 rounded text-xs overflow-auto max-h-64">
+            {JSON.stringify(results, null, 2)}
+          </pre>
         </div>
       )}
     </div>
