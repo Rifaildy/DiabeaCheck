@@ -30,7 +30,7 @@ const About = () => {
       id: "FC327D5Y1041",
       role: "Fullstack Developer",
       institution: "Universitas Teknologi Yogyakarta",
-      responsibilities: "Pengembangan Frontend (React.js) Halaman, Navigasi", // Updated responsibility
+      responsibilities: "UI/UX Design, Pengembangan Frontend & Backend, Pengujian Aplikasi, Deployment Web App",
     },
     {
       name: "Nasrun Hidayattullah",
@@ -38,14 +38,14 @@ const About = () => {
       role: "Fullstack Developer",
       institution: "Universitas Teknologi Yogyakarta",
       responsibilities:
-        "Pengembangan Backend (Node.js), API Development", // Corrected responsibility (removed Express.js)
+        "UI/UX Design, Pengembangan Frontend & Backend, Pengujian Aplikasi, Deployment Web App", 
     },
     {
       name: "Rifaildy Nurhuda Assalam",
       id: "FC327D5Y0431",
       role: "Fullstack Developer",
       institution: "Universitas Teknologi Yogyakarta",
-      responsibilities: "UI/UX Design, Pengujian Aplikasi, Deployment Web App", // Updated responsibility
+      responsibilities: "UI/UX Design, Pengembangan Frontend & Backend, Pengujian Aplikasi, Deployment Web App",
     },
   ];
 

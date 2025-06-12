@@ -15,14 +15,24 @@ class Database {
 
       const config = {
         host: process.env.DB_HOST || "localhost",
-        port: process.env.DB_PORT || 3306,
+        port: Number.parseInt(process.env.DB_PORT) || 3306,
         user: process.env.DB_USER || "root",
         password: process.env.DB_PASSWORD || "",
         database: process.env.DB_NAME || "diabeacheck_db",
         waitForConnections: true,
         connectionLimit: 10,
         queueLimit: 0,
+        reconnect: true,
+        connectTimeout: 60000,
+        // Removed SSL and invalid timeout options
       }
+
+      logger.info("🔄 Connecting to database...", {
+        host: config.host,
+        port: config.port,
+        database: config.database,
+        user: config.user,
+      })
 
       this.pool = mysql.createPool(config)
 
@@ -36,8 +46,15 @@ class Database {
 
       return this.pool
     } catch (error) {
-      logger.error("❌ Database connection failed:", error)
-      throw new Error("Database connection failed")
+      logger.error("❌ Database connection failed:", {
+        error: error.message,
+        code: error.code,
+        errno: error.errno,
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT,
+        database: process.env.DB_NAME,
+      })
+      throw new Error(`Database connection failed: ${error.message}`)
     }
   }
 
