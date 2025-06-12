@@ -1,71 +1,112 @@
 const mysql = require("mysql2/promise")
-const logger = require("../utils/logger")
 
 class Database {
   constructor() {
-    this.connection = null
     this.config = {
-      host: process.env.DB_HOST || "localhost",
+      host: process.env.DB_HOST || "sql12.freesqldatabase.com",
       port: Number.parseInt(process.env.DB_PORT || "3306", 10),
-      user: process.env.DB_USER || "root",
-      password: process.env.DB_PASSWORD || "",
-      database: process.env.DB_NAME || "diabeacheck",
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0,
-      // Removed SSL configuration as it's not supported by the free database
-    }
-  }
-
-  async connect() {
-    try {
-      logger.info(`Connecting to MySQL database at ${this.config.host}:${this.config.port}...`)
-
-      // For Vercel deployment, we'll create a new connection for each request
-      if (process.env.NODE_ENV === "production") {
-        logger.info("Running in production mode - will create connections on demand")
-        return true
-      }
-
-      this.connection = await mysql.createConnection(this.config)
-
-      logger.info("✅ Database connection established successfully")
-      return this.connection
-    } catch (error) {
-      logger.error("❌ Database connection failed:", error)
-      throw new Error("Database connection failed")
+      user: process.env.DB_USER || "sql12784318",
+      password: process.env.DB_PASSWORD || "MqKHL7mIcv",
+      database: process.env.DB_NAME || "sql12784318",
+      connectTimeout: 60000,
+      acquireTimeout: 60000,
+      timeout: 60000,
     }
   }
 
   async query(sql, params = []) {
+    let connection
     try {
-      // For Vercel serverless functions, create a new connection for each query
-      if (process.env.NODE_ENV === "production" || !this.connection) {
-        const connection = await mysql.createConnection(this.config)
-        const [results] = await connection.execute(sql, params)
-        await connection.end()
-        return results
-      }
-
-      // For development, use the persistent connection
-      const [results] = await this.connection.execute(sql, params)
+      // Create a new connection for each query (serverless-friendly)
+      connection = await mysql.createConnection(this.config)
+      const [results] = await connection.execute(sql, params)
       return results
     } catch (error) {
-      logger.error(`Error executing query: ${sql}`, error)
+      console.error(`Database query error: ${sql}`, error)
       throw error
+    } finally {
+      if (connection) {
+        try {
+          await connection.end()
+        } catch (closeError) {
+          console.error("Error closing connection:", closeError)
+        }
+      }
     }
   }
 
-  async disconnect() {
-    if (this.connection) {
-      try {
-        await this.connection.end()
-        logger.info("Database connection closed")
-      } catch (error) {
-        logger.error("Error closing database connection:", error)
-      } finally {
-        this.connection = null
-      }
+  // Helper methods
+  async findById(table, id) {
+    const sql = `SELECT * FROM ${table} WHERE id = ?`
+    const rows = await this.query(sql, [id])
+    return rows[0] || null
+  }
+
+  async findOne(table, conditions = {}) {
+    const keys = Object.keys(conditions)
+    const values = Object.values(conditions)
+
+    if (keys.length === 0) {
+      throw new Error("Conditions are required for findOne")
+    }
+
+    const whereClause = keys.map((key) => `${key} = ?`).join(" AND ")
+    const sql = `SELECT * FROM ${table} WHERE ${whereClause} LIMIT 1`
+
+    const rows = await this.query(sql, values)
+    return rows[0] || null
+  }
+
+  async insert(table, data) {
+    const keys = Object.keys(data)
+    const values = Object.values(data)
+    const placeholders = keys.map(() => "?").join(", ")
+
+    const sql = `INSERT INTO ${table} (${keys.join(", ")}) VALUES (${placeholders})`
+    const result = await this.query(sql, values)
+
+    return {
+      insertId: result.insertId,
+      affectedRows: result.affectedRows,
+    }
+  }
+
+  async update(table, data, conditions) {
+    const dataKeys = Object.keys(data)
+    const dataValues = Object.values(data)
+    const conditionKeys = Object.keys(conditions)
+    const conditionValues = Object.values(conditions)
+
+    if (conditionKeys.length === 0) {
+      throw new Error("Conditions are required for update")
+    }
+
+    const setClause = dataKeys.map((key) => `${key} = ?`).join(", ")
+    const whereClause = conditionKeys.map((key) => `${key} = ?`).join(" AND ")
+
+    const sql = `UPDATE ${table} SET ${setClause} WHERE ${whereClause}`
+    const result = await this.query(sql, [...dataValues, ...conditionValues])
+
+    return {
+      affectedRows: result.affectedRows,
+      changedRows: result.changedRows,
+    }
+  }
+
+  async delete(table, conditions) {
+    const keys = Object.keys(conditions)
+    const values = Object.values(conditions)
+
+    if (keys.length === 0) {
+      throw new Error("Conditions are required for delete")
+    }
+
+    const whereClause = keys.map((key) => `${key} = ?`).join(" AND ")
+    const sql = `DELETE FROM ${table} WHERE ${whereClause}`
+
+    const result = await this.query(sql, values)
+    return {
+      affectedRows: result.affectedRows,
     }
   }
 }
