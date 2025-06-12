@@ -1,33 +1,108 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
-import "./index.css"
 
-// Layout Components
+// Components
 import Header from "./components/layout/Header"
 import Footer from "./components/layout/Footer"
-
-// Pages
 import Home from "./pages/Home/Home"
+import About from "./pages/About/About"
+import Login from "./components/Auth/Login"
+import Register from "./components/Auth/Register"
+import Dashboard from "./components/Dashboard/Dashboard"
 import Prediction from "./pages/Prediction/Prediction"
 import Results from "./pages/Results/Results"
-import About from "./pages/About/About"
+import History from "./components/History/History"
+import Profile from "./components/Profile/Profile"
+
+// Utils
+import { isAuthenticated } from "./utils/auth"
+
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  return isAuthenticated() ? children : <Navigate to="/login" />
+}
+
+// Public Route Component (redirect to dashboard if authenticated)
+const PublicRoute = ({ children }) => {
+  return !isAuthenticated() ? children : <Navigate to="/dashboard" />
+}
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="App min-h-screen bg-gray-50 flex flex-col">
         <Header />
         <main className="flex-grow">
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<Home />} />
-            <Route path="/prediction" element={<Prediction />} />
-            <Route path="/results" element={<Results />} />
             <Route path="/about" element={<About />} />
-            <Route path="*" element={<Home />} />
+            <Route
+              path="/login"
+              element={
+                <PublicRoute>
+                  <Login />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <PublicRoute>
+                  <Register />
+                </PublicRoute>
+              }
+            />
+
+            {/* Protected Routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/prediction"
+              element={
+                <ProtectedRoute>
+                  <Prediction />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/results"
+              element={
+                <ProtectedRoute>
+                  <Results />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/history"
+              element={
+                <ProtectedRoute>
+                  <History />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Catch-all */}
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
         <Footer />
+
         <ToastContainer
           position="top-right"
           autoClose={5000}
