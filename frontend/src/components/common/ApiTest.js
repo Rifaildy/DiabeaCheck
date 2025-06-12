@@ -6,6 +6,11 @@ import { checkHealth, register, login, getProfile } from "../../services/api"
 const ApiTest = () => {
   const [results, setResults] = useState({})
   const [loading, setLoading] = useState({})
+  const [testData, setTestData] = useState({
+    email: "test@example.com",
+    password: "123456",
+    name: "Test User",
+  })
 
   const testEndpoint = async (name, testFunction) => {
     setLoading((prev) => ({ ...prev, [name]: true }))
@@ -28,24 +33,15 @@ const ApiTest = () => {
     {
       name: "Register Test",
       key: "register",
-      test: () =>
-        register({
-          name: "Test User",
-          email: "test@example.com",
-          password: "123456",
-        }),
+      test: () => register(testData),
     },
     {
       name: "Login Test",
       key: "login",
-      test: () =>
-        login({
-          email: "test@example.com",
-          password: "123456",
-        }),
+      test: () => login({ email: testData.email, password: testData.password }),
     },
     {
-      name: "Get Profile",
+      name: "Get Profile (/auth/me)",
       key: "profile",
       test: () => getProfile(),
     },
@@ -54,6 +50,40 @@ const ApiTest = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">API Connection Test</h1>
+
+      {/* Test Data Configuration */}
+      <div className="mb-8 p-4 bg-gray-100 rounded">
+        <h3 className="font-semibold mb-4">Test Data Configuration:</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Email:</label>
+            <input
+              type="email"
+              value={testData.email}
+              onChange={(e) => setTestData((prev) => ({ ...prev, email: e.target.value }))}
+              className="w-full px-3 py-2 border rounded"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Password:</label>
+            <input
+              type="password"
+              value={testData.password}
+              onChange={(e) => setTestData((prev) => ({ ...prev, password: e.target.value }))}
+              className="w-full px-3 py-2 border rounded"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Name:</label>
+            <input
+              type="text"
+              value={testData.name}
+              onChange={(e) => setTestData((prev) => ({ ...prev, name: e.target.value }))}
+              className="w-full px-3 py-2 border rounded"
+            />
+          </div>
+        </div>
+      </div>
 
       <div className="grid gap-6">
         {tests.map((test) => (
@@ -77,7 +107,7 @@ const ApiTest = () => {
                   }`}
                 >
                   <h3 className="font-semibold mb-2">{results[test.key].success ? "✅ Success" : "❌ Error"}</h3>
-                  <pre className="text-sm overflow-auto">
+                  <pre className="text-sm overflow-auto max-h-64">
                     {JSON.stringify(
                       results[test.key].success ? results[test.key].data : results[test.key].error,
                       null,
@@ -97,8 +127,18 @@ const ApiTest = () => {
           <li>Health: https://apideabeacheck-153b.vercel.app/health</li>
           <li>Register: https://apideabeacheck-153b.vercel.app/api/auth/register</li>
           <li>Login: https://apideabeacheck-153b.vercel.app/api/auth/login</li>
-          <li>Profile: https://apideabeacheck-153b.vercel.app/api/user/profile</li>
+          <li>Profile: https://apideabeacheck-153b.vercel.app/api/auth/me</li>
         </ul>
+
+        <div className="mt-4">
+          <h4 className="font-semibold mb-2">Test Steps:</h4>
+          <ol className="text-sm list-decimal list-inside space-y-1">
+            <li>Test Health Check first</li>
+            <li>Register a new user</li>
+            <li>Login with the registered user</li>
+            <li>Get profile (requires login token)</li>
+          </ol>
+        </div>
       </div>
     </div>
   )
