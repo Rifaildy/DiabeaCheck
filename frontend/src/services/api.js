@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api"
+const API_BASE_URL = process.env.REACT_APP_API_URL || "https://diabea-check.vercel.app"
 
 class ApiService {
   constructor() {
@@ -60,47 +60,24 @@ class ApiService {
     }
   }
 
-  // Prediction endpoints
-  async predictDiabetes(inputData) {
+  // Health check
+  async checkHealth() {
     try {
-      console.log("Sending prediction request with data:", inputData)
-      const response = await this.request("/prediction/diabetes", {
-        method: "POST",
-        body: JSON.stringify(inputData),
-      })
-
-      console.log("Prediction response:", response)
-
-      if (!response.success) {
-        throw new Error(response.message || response.error || "Prediction failed")
-      }
-
-      // Return the data part of the response
-      return response.data
+      const response = await this.request("/health")
+      return response
     } catch (error) {
-      console.error("Prediction API error:", error)
+      console.error("Health check error:", error)
       throw error
     }
   }
 
-  // Health check for ML service
-  async checkMLHealth() {
+  // Database test
+  async testDatabase() {
     try {
-      const response = await this.request("/prediction/health")
-      return response.data
+      const response = await this.request("/db-test")
+      return response
     } catch (error) {
-      console.error("ML health check error:", error)
-      throw error
-    }
-  }
-
-  // Test prediction
-  async testPrediction() {
-    try {
-      const response = await this.request("/prediction/test")
-      return response.data
-    } catch (error) {
-      console.error("Test prediction error:", error)
+      console.error("Database test error:", error)
       throw error
     }
   }
@@ -146,67 +123,42 @@ class ApiService {
 
   async logout() {
     try {
-      await this.request("/auth/logout", { method: "POST" })
+      // Just clear the token for now since we don't have a logout endpoint yet
+      this.setToken(null)
+      return { success: true, message: "Logged out successfully" }
     } catch (error) {
       console.error("Logout error:", error)
-    } finally {
-      this.setToken(null)
+      this.setToken(null) // Clear token anyway
+      throw error
     }
   }
 
-  async getProfile() {
-    return this.request("/auth/me")
-  }
-
-  async updateProfile(profileData) {
-    return this.request("/auth/profile", {
-      method: "PUT",
-      body: JSON.stringify(profileData),
-    })
-  }
-
-  // User endpoints
-  async getDashboard() {
-    return this.request("/user/dashboard")
-  }
-
-  async getPredictionHistory(page = 1, limit = 10) {
-    return this.request(`/user/predictions?page=${page}&limit=${limit}`)
-  }
-
-  async deletePrediction(id) {
-    return this.request(`/user/predictions/${id}`, {
-      method: "DELETE",
-    })
-  }
-
-  async getHealthTips() {
-    return this.request("/health/tips")
-  }
-
-  async submitFeedback(feedbackData) {
-    return this.request("/feedback", {
-      method: "POST",
-      body: JSON.stringify(feedbackData),
-    })
+  // Prediction endpoints (placeholder for now)
+  async predictDiabetes(inputData) {
+    try {
+      console.log("Sending prediction request with data:", inputData)
+      // For now, return a mock response since we haven't implemented the prediction endpoint yet
+      return {
+        success: true,
+        prediction: Math.random() > 0.5 ? "High Risk" : "Low Risk",
+        confidence: Math.random() * 100,
+        recommendations: ["Maintain a healthy diet", "Exercise regularly", "Monitor blood sugar levels"],
+      }
+    } catch (error) {
+      console.error("Prediction API error:", error)
+      throw error
+    }
   }
 }
 
 const apiService = new ApiService()
 
 // Export individual functions for easier use
+export const checkHealth = () => apiService.checkHealth()
+export const testDatabase = () => apiService.testDatabase()
 export const register = (userData) => apiService.register(userData)
 export const login = (credentials) => apiService.login(credentials)
 export const logout = () => apiService.logout()
-export const getProfile = () => apiService.getProfile()
-export const updateProfile = (profileData) => apiService.updateProfile(profileData)
 export const predictDiabetes = (inputData) => apiService.predictDiabetes(inputData)
-export const checkMLHealth = () => apiService.checkMLHealth()
-export const testPrediction = () => apiService.testPrediction()
-export const getDashboard = () => apiService.getDashboard()
-export const getPredictionHistory = (page, limit) => apiService.getPredictionHistory(page, limit)
-export const deletePrediction = (id) => apiService.deletePrediction(id)
-export const getHealthTips = () => apiService.getHealthTips()
-export const submitFeedback = (feedbackData) => apiService.submitFeedback(feedbackData)
 
 export default apiService
