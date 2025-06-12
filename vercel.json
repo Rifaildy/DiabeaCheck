@@ -12,7 +12,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/frontend/build/index.html"
+      "dest": "/index.html"
     }
   ],
   "env": {
