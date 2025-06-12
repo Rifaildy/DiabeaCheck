@@ -14,6 +14,7 @@ import Prediction from "./pages/Prediction/Prediction"
 import Results from "./pages/Results/Results"
 import History from "./components/History/History"
 import Profile from "./components/Profile/Profile"
+import ApiTest from "./components/common/ApiTest"
 
 // Utils
 import { isAuthenticated } from "./utils/auth"
@@ -38,6 +39,7 @@ function App() {
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
+            <Route path="/api-test" element={<ApiTest />} />
             <Route
               path="/login"
               element={
