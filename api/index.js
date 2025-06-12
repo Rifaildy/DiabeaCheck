@@ -28,25 +28,37 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }))
 
 // Root endpoint
 app.get("/", (req, res) => {
-  res.json({
+  // Set CORS headers
+  res.setHeader("Access-Control-Allow-Origin", "*")
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+  // Handle preflight requests
+  if (req.method === "OPTIONS") {
+    res.status(200).end()
+    return
+  }
+
+  // Root API response
+  res.status(200).json({
     message: "DiabeaCheck API Server is running!",
     version: "1.0.0",
     timestamp: new Date().toISOString(),
     environment: "production",
     availableEndpoints: [
-      "/health",
-      "/auth/register",
-      "/auth/login",
-      "/user/profile",
-      "/prediction/predict",
-      "/health/tips",
-      "/feedback",
+      "GET /api/health - Health check",
+      "POST /api/auth/register - User registration",
+      "POST /api/auth/login - User login",
+      "GET /api/user/profile - User profile",
+      "POST /api/prediction/predict - Diabetes prediction",
+      "GET /api/health/tips - Health tips",
+      "POST /api/feedback - Submit feedback",
     ],
   })
 })
 
 // Health check endpoint
-app.get("/health", (req, res) => {
+app.get("/api/health", (req, res) => {
   res.json({
     status: "OK",
     message: "Server is healthy",
@@ -60,26 +72,26 @@ app.get("/health", (req, res) => {
 // Import and use routes with error handling
 try {
   // Auth routes
-  app.post("/auth/register", (req, res) => {
+  app.post("/api/auth/register", (req, res) => {
     res.json({ message: "Register endpoint working", data: req.body })
   })
 
-  app.post("/auth/login", (req, res) => {
+  app.post("/api/auth/login", (req, res) => {
     res.json({ message: "Login endpoint working", data: req.body })
   })
 
   // User routes
-  app.get("/user/profile", (req, res) => {
+  app.get("/api/user/profile", (req, res) => {
     res.json({ message: "Profile endpoint working" })
   })
 
   // Prediction routes
-  app.post("/prediction/predict", (req, res) => {
+  app.post("/api/prediction/predict", (req, res) => {
     res.json({ message: "Prediction endpoint working", data: req.body })
   })
 
   // Health tips routes
-  app.get("/health/tips", (req, res) => {
+  app.get("/api/health/tips", (req, res) => {
     const healthTips = [
       {
         id: 1,
@@ -105,7 +117,7 @@ try {
   })
 
   // Feedback routes
-  app.post("/feedback", (req, res) => {
+  app.post("/api/feedback", (req, res) => {
     res.json({ message: "Feedback endpoint working", data: req.body })
   })
 } catch (error) {
@@ -119,13 +131,13 @@ app.use("*", (req, res) => {
     message: `Route ${req.originalUrl} not found`,
     availableRoutes: [
       "/",
-      "/health",
-      "/auth/register",
-      "/auth/login",
-      "/user/profile",
-      "/prediction/predict",
-      "/health/tips",
-      "/feedback",
+      "/api/health",
+      "/api/auth/register",
+      "/api/auth/login",
+      "/api/user/profile",
+      "/api/prediction/predict",
+      "/api/health/tips",
+      "/api/feedback",
     ],
     timestamp: new Date().toISOString(),
   })
