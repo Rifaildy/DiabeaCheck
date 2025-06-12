@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { checkHealth, register, login } from "../../services/api"
+import { checkHealth, register, login, getProfile } from "../../services/api"
 
 const ApiTest = () => {
   const [results, setResults] = useState({})
@@ -19,92 +19,86 @@ const ApiTest = () => {
     }
   }
 
-  const testHealth = () => testEndpoint("health", checkHealth)
-
-  const testRegister = () =>
-    testEndpoint("register", () =>
-      register({
-        name: "Test User",
-        email: "test@example.com",
-        password: "123456",
-      }),
-    )
-
-  const testLogin = () =>
-    testEndpoint("login", () =>
-      login({
-        email: "test@example.com",
-        password: "123456",
-      }),
-    )
-
-  const ResultDisplay = ({ name, result }) => {
-    if (!result) return null
-
-    return (
-      <div className={`mt-2 p-3 rounded ${result.success ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-        <strong>{name}:</strong>
-        {result.success ? (
-          <pre className="mt-1 text-xs overflow-auto">{JSON.stringify(result.data, null, 2)}</pre>
-        ) : (
-          <p className="mt-1">{result.error}</p>
-        )}
-      </div>
-    )
-  }
+  const tests = [
+    {
+      name: "Health Check",
+      key: "health",
+      test: () => checkHealth(),
+    },
+    {
+      name: "Register Test",
+      key: "register",
+      test: () =>
+        register({
+          name: "Test User",
+          email: "test@example.com",
+          password: "123456",
+        }),
+    },
+    {
+      name: "Login Test",
+      key: "login",
+      test: () =>
+        login({
+          email: "test@example.com",
+          password: "123456",
+        }),
+    },
+    {
+      name: "Get Profile",
+      key: "profile",
+      test: () => getProfile(),
+    },
+  ]
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-6 text-center">API Connection Test</h2>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">API Connection Test</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <button
-          onClick={testHealth}
-          disabled={loading.health}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
-        >
-          {loading.health ? "Testing..." : "Test Health"}
-        </button>
+      <div className="grid gap-6">
+        {tests.map((test) => (
+          <div key={test.key} className="border rounded-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">{test.name}</h2>
+              <button
+                onClick={() => testEndpoint(test.key, test.test)}
+                disabled={loading[test.key]}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              >
+                {loading[test.key] ? "Testing..." : "Test"}
+              </button>
+            </div>
 
-        <button
-          onClick={testRegister}
-          disabled={loading.register}
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
-        >
-          {loading.register ? "Testing..." : "Test Register"}
-        </button>
-
-        <button
-          onClick={testLogin}
-          disabled={loading.login}
-          className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:opacity-50"
-        >
-          {loading.login ? "Testing..." : "Test Login"}
-        </button>
+            {results[test.key] && (
+              <div className="mt-4">
+                <div
+                  className={`p-4 rounded ${
+                    results[test.key].success ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  <h3 className="font-semibold mb-2">{results[test.key].success ? "✅ Success" : "❌ Error"}</h3>
+                  <pre className="text-sm overflow-auto">
+                    {JSON.stringify(
+                      results[test.key].success ? results[test.key].data : results[test.key].error,
+                      null,
+                      2,
+                    )}
+                  </pre>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
-      <div className="space-y-4">
-        <ResultDisplay name="Health Check" result={results.health} />
-        <ResultDisplay name="Register" result={results.register} />
-        <ResultDisplay name="Login" result={results.login} />
-      </div>
-
-      <div className="mt-6 p-4 bg-gray-100 rounded">
-        <h3 className="font-semibold mb-2">API Configuration:</h3>
-        <p>
-          <strong>Base URL:</strong> https://apideabeacheck-153b.vercel.app/api
-        </p>
-        <p>
-          <strong>Frontend URL:</strong> https://diabea-check-5ok4.vercel.app
-        </p>
-        <div className="mt-2">
-          <strong>Test Endpoints:</strong>
-          <ul className="list-disc list-inside mt-1 text-sm">
-            <li>GET /health → https://apideabeacheck-153b.vercel.app/api/health</li>
-            <li>POST /auth/register → https://apideabeacheck-153b.vercel.app/api/auth/register</li>
-            <li>POST /auth/login → https://apideabeacheck-153b.vercel.app/api/auth/login</li>
-          </ul>
-        </div>
+      <div className="mt-8 p-4 bg-gray-100 rounded">
+        <h3 className="font-semibold mb-2">Expected URLs:</h3>
+        <ul className="text-sm space-y-1">
+          <li>Health: https://apideabeacheck-153b.vercel.app/health</li>
+          <li>Register: https://apideabeacheck-153b.vercel.app/api/auth/register</li>
+          <li>Login: https://apideabeacheck-153b.vercel.app/api/auth/login</li>
+          <li>Profile: https://apideabeacheck-153b.vercel.app/api/user/profile</li>
+        </ul>
       </div>
     </div>
   )

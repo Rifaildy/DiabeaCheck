@@ -1,3 +1,4 @@
+// FIXED: Base URL TANPA /api suffix untuk menghindari double /api
 const API_BASE_URL = process.env.REACT_APP_API_URL || "https://apideabeacheck-153b.vercel.app"
 
 class ApiService {
@@ -71,18 +72,7 @@ class ApiService {
     }
   }
 
-  // Database test
-  async testDatabase() {
-    try {
-      const response = await this.request("/api/health")
-      return response
-    } catch (error) {
-      console.error("Database test error:", error)
-      throw error
-    }
-  }
-
-  // Auth endpoints - FIXED: Using correct /api/auth prefix
+  // Auth endpoints - WITH /api prefix since base URL doesn't have it
   async register(userData) {
     try {
       console.log("Registering user:", userData)
@@ -130,12 +120,12 @@ class ApiService {
       return response
     } catch (error) {
       console.error("Logout error:", error)
-      this.setToken(null) // Clear token anyway
+      this.setToken(null)
       throw error
     }
   }
 
-  // User endpoints - FIXED: Using correct /api/user prefix
+  // User endpoints
   async getProfile() {
     try {
       const response = await this.request("/api/user/profile")
@@ -186,7 +176,7 @@ class ApiService {
     }
   }
 
-  // Prediction endpoints - FIXED: Using correct /api/prediction prefix
+  // Prediction endpoints
   async predictDiabetes(inputData) {
     try {
       console.log("Sending prediction request with data:", inputData)
@@ -223,7 +213,7 @@ class ApiService {
     }
   }
 
-  // Feedback endpoint - FIXED: Using correct /api/feedback prefix
+  // Feedback endpoint
   async submitFeedback(feedbackData) {
     try {
       console.log("Submitting feedback:", feedbackData)
@@ -272,7 +262,6 @@ const apiService = new ApiService()
 
 // Export individual functions for easier use
 export const checkHealth = () => apiService.checkHealth()
-export const testDatabase = () => apiService.testDatabase()
 export const register = (userData) => apiService.register(userData)
 export const login = (credentials) => apiService.login(credentials)
 export const logout = () => apiService.logout()
