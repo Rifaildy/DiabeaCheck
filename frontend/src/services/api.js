@@ -41,21 +41,8 @@ class ApiService {
 
       const response = await fetch(url, config)
 
-      // Log the actual response for debugging
-      console.log("Response status:", response.status)
-      console.log("Response headers:", response.headers)
-
       if (!response.ok) {
-        const errorText = await response.text()
-        console.error("Error response text:", errorText)
-
-        let errorData = {}
-        try {
-          errorData = JSON.parse(errorText)
-        } catch (e) {
-          errorData = { message: errorText }
-        }
-
+        const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.message || errorData.error || `HTTP error! status: ${response.status}`)
       }
 
@@ -206,17 +193,14 @@ class ApiService {
     }
   }
 
-  // Prediction endpoints - Use the correct endpoint from backend documentation
+  // Prediction endpoints - NO /api prefix since base URL already has /api
   async predictDiabetes(inputData) {
     try {
       console.log("Sending prediction request with data:", inputData)
-
-      // Use the correct endpoint path from your backend documentation
-      const response = await this.request("/prediction/diabetes", {
+      const response = await this.request("/prediction", {
         method: "POST",
         body: JSON.stringify(inputData),
       })
-
       return response
     } catch (error) {
       console.error("Prediction API error:", error)

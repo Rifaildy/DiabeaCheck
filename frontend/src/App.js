@@ -2,22 +2,19 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 
-// Components & Pages
+// Components
 import Header from "./components/layout/Header"
 import Footer from "./components/layout/Footer"
-
-import HomePage from "./pages/HomePage"
-import LoginPage from "./pages/LoginPage"
-import RegisterPage from "./pages/RegisterPage"
-import DashboardPage from "./pages/DashboardPage"
-import ProfilePage from "./pages/ProfilePage"
-import AdminDashboardPage from "./pages/AdminDashboardPage"
-import NotFoundPage from "./pages/NotFoundPage"
-import UnauthorizedPage from "./pages/UnauthorizedPage"
-import ForgotPasswordPage from "./pages/ForgotPasswordPage"
-import ResetPasswordPage from "./pages/ResetPasswordPage"
-
-import ApiConnectionTest from "./components/common/ApiConnectionTest"
+import Home from "./pages/Home/Home"
+import About from "./pages/About/About"
+import Login from "./components/Auth/Login"
+import Register from "./components/Auth/Register"
+import Dashboard from "./components/Dashboard/Dashboard"
+import Prediction from "./pages/Prediction/Prediction"
+import Results from "./pages/Results/Results"
+import History from "./components/History/History"
+import Profile from "./components/Profile/Profile"
+import ApiTest from "./components/common/ApiTest"
 
 // Utils
 import { isAuthenticated } from "./utils/auth"
@@ -40,12 +37,14 @@ function App() {
         <main className="flex-grow">
           <Routes>
             {/* Public Routes */}
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/api-test" element={<ApiTest />} />
             <Route
               path="/login"
               element={
                 <PublicRoute>
-                  <LoginPage />
+                  <Login />
                 </PublicRoute>
               }
             />
@@ -53,21 +52,41 @@ function App() {
               path="/register"
               element={
                 <PublicRoute>
-                  <RegisterPage />
+                  <Register />
                 </PublicRoute>
               }
             />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-            <Route path="/unauthorized" element={<UnauthorizedPage />} />
-            <Route path="/api-test" element={<ApiConnectionTest />} />
 
             {/* Protected Routes */}
             <Route
               path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <DashboardPage />
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/prediction"
+              element={
+                <ProtectedRoute>
+                  <Prediction />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/results"
+              element={
+                <ProtectedRoute>
+                  <Results />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/history"
+              element={
+                <ProtectedRoute>
+                  <History />
                 </ProtectedRoute>
               }
             />
@@ -75,26 +94,17 @@ function App() {
               path="/profile"
               element={
                 <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute>
-                  <AdminDashboardPage />
+                  <Profile />
                 </ProtectedRoute>
               }
             />
 
-            {/* Catch-all for undefined routes */}
-            <Route path="*" element={<NotFoundPage />} />
+            {/* Catch-all */}
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
         <Footer />
 
-        {/* Toast Notifications */}
         <ToastContainer
           position="top-right"
           autoClose={5000}
@@ -107,18 +117,6 @@ function App() {
           pauseOnHover
           theme="light"
         />
-
-        {/* Temporary API Test - Only in development */}
-        {process.env.NODE_ENV === "development" && (
-          <div className="fixed bottom-4 right-4 z-50">
-            <details className="bg-white border shadow-lg rounded">
-              <summary className="p-2 cursor-pointer">API Test</summary>
-              <div className="p-4 w-96 max-h-96 overflow-auto">
-                <ApiConnectionTest />
-              </div>
-            </details>
-          </div>
-        )}
       </div>
     </Router>
   )
