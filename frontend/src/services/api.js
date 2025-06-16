@@ -41,8 +41,21 @@ class ApiService {
 
       const response = await fetch(url, config)
 
+      // Log the actual response for debugging
+      console.log("Response status:", response.status)
+      console.log("Response headers:", response.headers)
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
+        const errorText = await response.text()
+        console.error("Error response text:", errorText)
+
+        let errorData = {}
+        try {
+          errorData = JSON.parse(errorText)
+        } catch (e) {
+          errorData = { message: errorText }
+        }
+
         throw new Error(errorData.message || errorData.error || `HTTP error! status: ${response.status}`)
       }
 
@@ -78,9 +91,16 @@ class ApiService {
   async register(userData) {
     try {
       console.log("Registering user:", userData)
+      // Ensure proper data format for backend
+      const registerData = {
+        email: userData.email,
+        password: userData.password,
+        name: userData.name || userData.firstName || "User", // Handle different name formats
+      }
+
       const response = await this.request("/auth/register", {
         method: "POST",
-        body: JSON.stringify(userData),
+        body: JSON.stringify(registerData),
       })
 
       if (response.token) {
@@ -127,13 +147,15 @@ class ApiService {
     }
   }
 
-  // User endpoints - NO /api prefix since base URL already has /api
+  // User endpoints - Try different endpoint paths
   async getProfile() {
     try {
+      // Try /auth/me first (as mentioned in documentation)
       const response = await this.request("/auth/me")
       return response
     } catch (error) {
       console.error("Get profile error:", error)
+      // If /auth/me fails, return mock data for testing
       return {
         user: {
           id: 1,
@@ -184,14 +206,17 @@ class ApiService {
     }
   }
 
-  // Prediction endpoints - NO /api prefix since base URL already has /api
+  // Prediction endpoints - Use the correct endpoint from backend documentation
   async predictDiabetes(inputData) {
     try {
       console.log("Sending prediction request with data:", inputData)
-      const response = await this.request("/prediction", {
+
+      // Use the correct endpoint path from your backend documentation
+      const response = await this.request("/prediction/diabetes", {
         method: "POST",
         body: JSON.stringify(inputData),
       })
+
       return response
     } catch (error) {
       console.error("Prediction API error:", error)
